@@ -11,7 +11,7 @@ const router = express.Router();
 
 const schema = Joi.object().keys({
     username: Joi.string().regex(/(^[a-zA-Z0-9_]+$)/).min(2).max(30).required(), 
-    password: Joi.string().min(6).required()
+    password: Joi.string().trim().min(6).required()
 });
 
 // any router in here is pre-pended with /auth/
