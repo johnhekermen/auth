@@ -3,7 +3,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
       <a class="navbar-brand" href="#">Auth</a>
     </nav>
-    <router-view/>
+    <router-view class="container pt-2"/>
   </div>
 </template>
 
