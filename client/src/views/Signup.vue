@@ -1,67 +1,148 @@
 <template>
   <div>
     <h1>Signup</h1>
-        <form @submit.prevent="signup">
-        <div class="form-group">
-            <label for="username">Username</label>
-            <!-- eslint-disable-next-line max-len -->
-            <input
-                v-model="user.username"
-                type="text"
-                class="form-control"
-                id="username"
-                aria-describedby="usernameHelp"
-                placeholder="Enter a username" required>
-            <h5 id="usernameHelp" class="form-text text-muted">
-                Username must be longer than 2 characters and shorter than 30.
-            </h5>
-        </div>
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="password">Password</label>
-                <input
-                    v-model="user.password"
-                    type="password"
-                    class="form-control"
-                    id="password"
-                    aria-describedby="passwordHelp"
-                    placeholder="Password" required>
-                <h5 id="passwordHelp" class="form-text text-muted">
-                    Password must be longer than 10 characters.
-                </h5>
-            </div>
-            <div class="form-group col-md-6">
-                <label for="confirmPassword">Confirm</label>
-                <input
-                    v-model="user.confirmPassword"
-                    type="password"
-                    class="form-control"
-                    id="confirmPassword"
-                    aria-describedby="confirmPasswordHelp"
-                    placeholder="Confirm password" required>
-                <h5 id="confirmPasswordHelp" class="form-text text-muted">
-                    Please confirm your password.
-                </h5>
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary">Sign Up</button>
-       </form>
+    <div v-if="signingUp" class="text-center">
+      <img src="../assets/doublering231px.svg" alt="loader-img">
+    </div>
+    <div v-if="errorMessage" class="alert alert-danger" role="alert">
+      {{ errorMessage }}
+    </div>
+    <form v-if="!signingUp" @submit.prevent="signup">
+      <div class="form-group">
+          <label for="username">Username</label>
+          <!-- eslint-disable-next-line max-len -->
+          <input
+              v-model="user.username"
+              type="text"
+              class="form-control"
+              id="username"
+              aria-describedby="usernameHelp"
+              placeholder="Enter a username" required>
+          <h5 id="usernameHelp" class="form-text text-muted">
+              Username must be longer than 2 characters and shorter than 30.
+          </h5>
+      </div>
+      <div class="form-row">
+          <div class="form-group col-md-6">
+              <label for="password">Password</label>
+              <input
+                  v-model="user.password"
+                  type="password"
+                  class="form-control"
+                  id="password"
+                  aria-describedby="passwordHelp"
+                  placeholder="Password" required>
+              <h5 id="passwordHelp" class="form-text text-muted">
+                  Password must be longer than 6 characters.
+              </h5>
+          </div>
+          <div class="form-group col-md-6">
+              <label for="confirmPassword">Confirm</label>
+              <input
+                  v-model="user.confirmPassword"
+                  type="password"
+                  class="form-control"
+                  id="confirmPassword"
+                  aria-describedby="confirmPasswordHelp"
+                  placeholder="Confirm password" required>
+              <h5 id="confirmPasswordHelp" class="form-text text-muted">
+                  Please confirm your password.
+              </h5>
+          </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Sign Up</button>
+    </form>
   </div>
 </template>
 
 <script>
+import Joi from 'joi';
+
+const SIGNUP_URL = 'http://localhost:5000/auth/signup';
+
+const schema = Joi.object().keys({ // validation schema
+// eslint-disable-next-line
+  username: Joi.string().regex(/(^[a-zA-Z0-9_]+$)/).min(2).max(30).required(),
+  password: Joi.string().trim().min(6).required(),
+  confirmPassword: Joi.string().trim().min(6).required(),
+});
+
 export default {
   data: () => ({
+    signingUp: false,
+    errorMessage: '',
     user: {
       username: '',
       password: '',
       confirmPassword: '',
     },
   }),
+  watch: {
+    user: {
+      handler() {
+        this.errorMessage = '';
+      },
+      deep: true,
+    },
+  },
   methods: {
     signup() {
-      // eslint-disable-next-line
-      console.log('form submitted');
+      this.errorMessage = '';
+      if (this.validUser()) {
+        // send data to server
+        // eslint-disable-next-line
+        console.log('form submitted');
+        const newUser = {
+          username: this.user.username,
+          password: this.user.password,
+        };
+        this.signingUp = true;
+        fetch(SIGNUP_URL, {
+          method: 'post',
+          body: JSON.stringify(newUser),
+          headers: {
+            'content-type': 'application/json',
+          },
+        }).then((response) => {
+          if (response.ok) {
+            return response.json();
+          }
+
+          return response.json().then((error) => {
+            throw new Error(error.message);
+          });
+        }).then((user) => {
+          setTimeout(() => {
+            // eslint-disable-next-line
+            console.log(user);
+            this.signingUp = false;
+            this.$router.push('/login');
+          }, 1000);
+        }).catch((error) => {
+          setTimeout(() => {
+            // eslint-disable-next-line
+            console.log(error);
+            this.signingUp = false;
+            this.errorMessage = error;
+          }, 1000);
+        });
+      }
+    },
+    validUser() {
+      if (this.user.password !== this.user.confirmPassword) {
+        this.errorMessage = 'Passwords must match';
+        return false;
+      }
+      const result = Joi.validate(this.user, schema);
+      if (result.error === null) {
+        return true;
+      }
+      if (result.error.message.includes('username')) {
+        this.errorMessage = 'Username is invalid.';
+      } else {
+        this.errorMessage = 'Password is invalid.';
+      }
+      return false;
     },
   },
 };

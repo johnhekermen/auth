@@ -28,7 +28,8 @@ router.post('/signup', (req, res, next) => { // http://localhost:5000/auth/signu
             username: req.body.username
         }).then(user => {
             if (user) { // already a user in db with this username
-                const error = new Error('This username is not OG');
+                const error = new Error('This username is in use');
+                res.status(409);
                 next(error); // call next route which is error handler
             } else { //move on to password hashing
                 bcrypt.hash(req.body.password, 12).then(hashedPassword => {
@@ -43,7 +44,8 @@ router.post('/signup', (req, res, next) => { // http://localhost:5000/auth/signu
                 });
             }
         });
-    } else { // calling next with validation result if theres an error 
+    } else { // calling next with validation result if theres an error
+        res.status(422); 
         next(result.error);
     }
 });

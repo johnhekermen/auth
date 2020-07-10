@@ -1,10 +1,15 @@
 const express = require('express');
 const volleyball = require('volleyball');
+const cors = require('cors');
 
 const app = express();
 
 const auth = require('./auth/index.js');
+
 app.use(volleyball); // logger for requests and responses
+app.use(cors({
+  origin: 'http://localhost:8080'
+}));
 app.use(express.json()); // json body parser
 
 app.get('/', (req, res) => { // http://localhost:5000/
