@@ -1,6 +1,7 @@
 const express = require('express');
 const Joi = require('joi');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const db = require('../db/connection.js');
 const users = db.get('users');
@@ -47,6 +48,37 @@ router.post('/signup', (req, res, next) => { // http://localhost:5000/auth/signu
     } else { // calling next with validation result if theres an error
         res.status(422); 
         next(result.error);
+    }
+});
+
+function loginError(res, next) {
+    res.status(422);
+    const error = new Error('Unable to login.');
+    next(error);
+}
+
+router.post('/login', (req, res, next) => {
+    const result = Joi.validate(req.body, schema);
+    if (result.error === null) {
+        users.findOne({
+            username: req.body.username,
+        }).then(user => {
+            if (user) {
+                console.log('comparing passwords...');
+                
+                bcrypt.compare(req.body.password, user.password).then((result) => {
+                    if (result){
+                        // TODO
+                    } else {
+                        loginError(res, next); 
+                    }
+                });
+            } else {
+                loginError(res, next);
+            }
+        })
+    } else {
+        loginError(res, next);
     }
 });
 
