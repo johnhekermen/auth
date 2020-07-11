@@ -68,7 +68,18 @@ router.post('/login', (req, res, next) => {
                 
                 bcrypt.compare(req.body.password, user.password).then((result) => {
                     if (result){
-                        // TODO
+                        // if correct password
+                        const payload = {
+                            _id: user._id,
+                            username: user.username
+                        };
+                        jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: '1d'}, (err, token) => {
+                            if (err) {
+                                loginError(res, next);
+                            } else {
+                                res.json({ token });
+                            }
+                        })
                     } else {
                         loginError(res, next); 
                     }
