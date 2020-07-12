@@ -85,6 +85,7 @@ export default {
             throw new Error(error.message);
           });
         }).then((result) => {
+          localStorage.token = result.token;
           setTimeout(() => {
             // eslint-disable-next-line
             console.log(result);

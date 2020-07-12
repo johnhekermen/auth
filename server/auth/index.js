@@ -15,6 +15,20 @@ const schema = Joi.object().keys({ // validation schema
     password: Joi.string().trim().min(6).required()
 });
 
+function createTokenSendResponse(user, res, next) {
+    const payload = {
+        _id: user._id,
+        username: user.username
+    };
+    jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: '1d'}, (err, token) => {
+        if (err) {
+            loginError(res, next);
+        } else {
+            res.json({ token });
+        }
+    })
+}
+
 // any router in here is pre-pended with /auth/
 router.get('/', (req, res) => { // http://localhost:5000/auth/
     res.json({
@@ -39,8 +53,9 @@ router.post('/signup', (req, res, next) => { // http://localhost:5000/auth/signu
                         password: hashedPassword
                     };
                     users.insert(newUser).then(insertedUser => { // insert user object to database
-                        delete insertedUser.password;
-                        res.json(insertedUser);
+                        // delete insertedUser.password;
+                        // res.json(insertedUser);
+                        createTokenSendResponse(insertedUser, res, next);
                     });
                 });
             }
@@ -65,21 +80,10 @@ router.post('/login', (req, res, next) => {
         }).then(user => {
             if (user) {
                 console.log('comparing passwords...');
-                
                 bcrypt.compare(req.body.password, user.password).then((result) => {
                     if (result){
                         // if correct password
-                        const payload = {
-                            _id: user._id,
-                            username: user.username
-                        };
-                        jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: '1d'}, (err, token) => {
-                            if (err) {
-                                loginError(res, next);
-                            } else {
-                                res.json({ token });
-                            }
-                        })
+                        createTokenSendResponse(user, res, next);
                     } else {
                         loginError(res, next); 
                     }

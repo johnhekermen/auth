@@ -111,12 +111,13 @@ export default {
           return response.json().then((error) => {
             throw new Error(error.message);
           });
-        }).then((user) => {
+        }).then((result) => {
+          localStorage.token = result.token;
           setTimeout(() => {
             // eslint-disable-next-line
-            console.log(user);
+            console.log(result);
             this.signingUp = false;
-            this.$router.push('/login');
+            this.$router.push('/dashboard');
           }, 1000);
         }).catch((error) => {
           setTimeout(() => {
