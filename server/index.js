@@ -7,6 +7,7 @@ require('dotenv').config();
 const app = express();
 const middlewares = require('./auth/middlewares.js');
 const auth = require('./auth/index.js');
+const notes = require('./api/notes.js');
 
 app.use(volleyball); // logger for requests and responses
 app.use(cors({
@@ -23,6 +24,7 @@ app.get('/', (req, res) => { // http://localhost:5000/
 });
 
 app.use('/auth', auth); // http://localhost:5000/auth/
+app.use('/api/v1/notes', middlewares.isLoggedIn, notes);
 
 function notFound(req, res, next) { // if the request route didn't match any existent route
   res.status(404);
